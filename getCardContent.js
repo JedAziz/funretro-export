@@ -1,3 +1,5 @@
+const { getFileText } = require('./getFileText.js');
+
 // Function to extract data for each list, including section title and cards
 const getListData = async (lists) => {
     try {
