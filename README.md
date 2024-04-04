@@ -1,40 +1,10 @@
-# FunRetro.io export
+# FunRetro Export Script
 
-[![License][license-badge]][license-url]
+This project contains a script to export data from FunRetro boards. It prompts the user to input a URL, file path, and file format (either CSV or Markdown) and then runs the `yarn start` command with the provided data.
 
-> CLI tool to easily export [FunRetro.io](https://funretro.io/) retrospective boards using Playwright
+## How to Run
 
-## Installing / Getting started
-
-It's required to have [npm](https://www.npmjs.com/get-npm) installed locally to follow the instructions.
-
-```shell
-git clone https://github.com/julykaz/funretro-export.git
-cd funretro-export
-npm install
-npm start -- "http://funretro.io/board..." "../exported-file.txt"
-```
-
-## Issues
-
-If you encounter the following error
-```
-Error: browserType.launch: Browser is not supported on current platform
-Note: use DEBUG=pw:api environment variable and rerun to capture Playwright logs.
-```
-then execute this command:
-```
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true npm i -D playwright
-```
-
-## TODO
-
-- Export card comments
-- More export options (PDF, CSV)
-
-## Licensing
-
-MIT License
-
-[license-badge]: https://img.shields.io/github/license/robertoachar/docker-express-mongodb.svg
-[license-url]: https://opensource.org/licenses/MIT
+1. Clone this repository to your local machine:
+2. Navigate to the project directory
+3. Install dependencies by running `yarn`
+4. Run yarn `yarn generate`
