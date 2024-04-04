@@ -13,8 +13,9 @@ module.exports.formatMarkdown = function (boardData) {
 
         // Iterate over cards
         list.cards.forEach((card) => {
-            // Add card text and vote count
-            markdown.push(`- ${card.text} ${formatVoteCount(card.votes)}`);
+            if (card.votes > 0) {
+                markdown.push(`- ${card.text} ${formatVoteCount(card.votes)}`);
+            }
         });
 
         markdown.push('');
