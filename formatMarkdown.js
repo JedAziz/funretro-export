@@ -1,22 +1,27 @@
 module.exports.formatMarkdown = function (boardData) {
     const markdown = [];
-    // add boardtitle
+
+    // Add board title as a heading
     markdown.push(`# ${boardData.boardTitle}`);
     markdown.push('');
-    // add lists
+
+    // Iterate over lists
     boardData.lists.forEach((list) => {
-      // add list title
-      markdown.push(`## ${list.section}`);
-      markdown.push('');
-      // add list cards
-      list.cards.forEach((card) => {
-        markdown.push(`- ${card.text} ${formatVoteCount(card.votes)}`);
-      });
-  
-      markdown.push('');
+        // Add section title as a heading
+        markdown.push(`## ${list.section}`);
+        markdown.push('');
+
+        // Iterate over cards
+        list.cards.forEach((card) => {
+            // Add card text and vote count
+            markdown.push(`- ${card.text} ${formatVoteCount(card.votes)}`);
+        });
+
+        markdown.push('');
     });
-  
+
     return markdown.join('\n');
-  };
-  
-  const formatVoteCount = (votes) => (votes > 0 ? `(+${votes})` : '');
+};
+
+// Function to format vote count
+const formatVoteCount = (votes) => (votes > 0 ? `(+${votes})` : '');
