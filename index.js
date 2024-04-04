@@ -1,66 +1,61 @@
-const fs = require('fs');
-const path = require('path');
 const { chromium } = require('playwright');
-const { exit } = require('process');
+const { format } = require('./format');
+const { getCardContent } = require('./getCardContent');
+const { getFileText } = require('./getFileText');
+const { writeToFile } = require('./writeToFile');
+const path = require('path');
 
-const [url, file] = process.argv.slice(2);
-
-if (!url) {
-    throw 'Please provide a URL as the first argument.';
-}
+const DEFAULT_FORMAT = 'csv';
+const ACCEPTED_FORMATS = ['csv', 'markdown'];
 
 async function run() {
-    const browser = await chromium.launch();
-    const page = await browser.newPage();
+  const [url, file, _formatOption] = process.argv.slice(2);
+  const formatOption = _formatOption ? _formatOption.trim() : DEFAULT_FORMAT;
 
+  if (!ACCEPTED_FORMATS.includes(formatOption)) {
+    throw new Error(`Invalid format specified. Accepted formats: ${ACCEPTED_FORMATS.join(',')}`);
+  }
+
+  if (!url) {
+    throw new Error('Please provide a URL as the first argument.');
+  }
+
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+
+  try {
     await page.goto(url);
-    await page.waitForSelector('.easy-card-list');
+    await page.waitForSelector('.easy-board');
+    await page.waitForSelector('.board-name');
 
-    const boardTitle = await page.$eval('.board-name', (node) => node.innerText.trim());
+    const boardTitle = await page.$eval('.board-name', getFileText);
 
     if (!boardTitle) {
-        throw 'Board title does not exist. Please check if provided URL is correct.'
+      throw new Error('Board title does not exist. Please check if provided URL is correct.');
     }
 
-    let parsedText = boardTitle + '\n\n';
+    const listElements = await page.$$('.easy-card-list');
+    const lists = await getCardContent(listElements);
+    const boardData = { boardTitle, lists };
 
-    const columns = await page.$$('.easy-card-list');
+    const content = format(formatOption, boardData);
+    const resolvedPath = path.resolve(file || `../${boardTitle.replace(/\//g, '').replace(/\s/g, '_')}.${formatOption}`);
 
-    for (let i = 0; i < columns.length; i++) {
-        const columnTitle = await columns[i].$eval('.column-header', (node) => node.innerText.trim());
-
-        const messages = await columns[i].$$('.easy-board-front');
-        if (messages.length) {
-            parsedText += columnTitle + '\n';
-        }
-        for (let i = 0; i < messages.length; i++) {
-            const messageText = await messages[i].$eval('.easy-card-main .easy-card-main-content .text', (node) => node.innerText.trim());
-            const votes = await messages[i].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
-            parsedText += `- ${messageText} (${votes})` + '\n';
-        }
-
-        if (messages.length) {
-            parsedText += '\n';
-        }
-    }
-
-    return parsedText;
-}
-
-function writeToFile(filePath, data) {
-    const resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.txt`);
-    fs.writeFile(resolvedPath, data, (error) => {
-        if (error) {
-            throw error;
-        } else {
-            console.log(`Successfully written to file at: ${resolvedPath}`);
-        }
-        process.exit();
-    });
+    return { content, resolvedPath, formatOption };
+  } catch (error) {
+    handleError(error);
+  } finally {
+    await browser.close();
+  }
 }
 
 function handleError(error) {
-    console.error(error);
+  console.error(error);
+  process.exit(1);
 }
 
-run().then((data) => writeToFile(file, data)).catch(handleError);
+run()
+  .then(({ content, resolvedPath, formatOption }) => {
+    writeToFile(resolvedPath, { content }, formatOption);
+  })
+  .catch(handleError);
